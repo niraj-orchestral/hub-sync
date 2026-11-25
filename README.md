@@ -1,102 +1,92 @@
 # hub-sync
 
 Keeps the **orchestral-hub** organisation's StackStorm packs in sync with
-[StackStorm Exchange](https://github.com/StackStorm-Exchange), using only GitHub Actions.
+[StackStorm Exchange](https://github.com/StackStorm-Exchange), using GitHub Actions.
 
-| Workflow | When | What it does | Steps |
-|---|---|---|---|
-| **Quarterly sync** (`quarterly-sync.yml`) | 1 Jan/Apr/Jul/Oct, or by hand | Copies new packs to the hub as public repos (after checking them). Updates packs we haven't changed. Opens a "Sync with upstream" PR for packs we have changed, so our work is never overwritten. | 1, 2, 3, 8, 9 |
-| **Recreate upstream PR** (`recreate-upstream-pr.yml`) | By hand | Copies an upstream PR into the hub repo as branch `upstream-pr/<N>` and opens the same PR there. | 4 → 6 |
-| **Pack report** (`report.yml`) | Mondays, or by hand | Checks every hub pack, shows which are behind upstream, lists open hub PRs with test results and open upstream PRs (new ones marked). Saves `reports/latest.md` and opens an issue if anything fails. | 2, 4, 5, 6 |
+## Quarterly sync
 
-Testing PRs (step 5) is mostly done by the packs themselves: almost every pack ships StackStorm's
-CI workflow, which runs lint and unit tests on each PR. Merging (step 7) is done on GitHub once
-those checks pass.
+Runs automatically at 02:00 UTC on 1 Jan, 1 Apr, 1 Jul and 1 Oct. To run it by hand:
+Actions → **Quarterly sync** → Run workflow.
 
-## How updates work
-
-| Hub repo compared with upstream | What the Quarterly sync does |
+| Input | Use |
 |---|---|
-| Doesn't exist yet | Checks the pack; if it passes, creates the public repo and pushes the code and tags |
-| Same as upstream, or only has our own extra commits | Nothing |
-| Behind upstream, no changes of ours | Fast-forwards it, if the new version passes the check |
-| Behind upstream and has our changes, the new version fails the check, or branch protection blocks the push | Opens or refreshes a PR from branch `hub-sync/upstream` |
+| Dry run | Ticked: only reports what would change. Untick to make changes. Scheduled runs are always real. |
+| Only these repos | Space-separated repo names, e.g. `stackstorm-aws stackstorm-jira`. Empty = all packs. |
+| Also copy archived upstream repos | Leave unticked. Archived repos are retired packs. |
 
-Commits someone adds to `hub-sync/upstream` (for example to fix conflicts) are never overwritten.
+What it does:
+- **New upstream packs** are checked and, if they pass, created as public repos in orchestral-hub.
+- **Packs we haven't changed** are updated to the latest upstream version.
+- **Packs we have changed** are never overwritten. Instead, a **"Sync with upstream"** PR is
+  opened on that pack (branch `hub-sync/upstream`) for review. Merge it like any other PR.
+  If it has conflicts, fix them on that branch; later syncs won't overwrite your fixes.
+- Repos without a `pack.yaml` (`ci`, `web`, `index`, ...) and repos in `config/exclude.txt` are skipped.
 
-Skipped automatically: repos with no `pack.yaml` (`ci`, `web`, `index`, ...), archived repos
-(unless *include archived* is ticked), empty repos, and anything listed in `config/exclude.txt`.
+The run's summary page lists every pack that was created, updated or got a sync PR.
+A full run takes about 10–15 minutes.
 
-## Setup
+## Pack report
 
-### 1. Create this repo
-Create `orchestral-hub/hub-sync` on GitHub **empty**: no README, `.gitignore` template **None**,
-license **None** (this repo already contains them). Then push:
+Runs automatically every Monday at 06:00 UTC. To run it by hand:
+Actions → **Pack report** → Run workflow (leave *only* empty for a full report).
 
-```bash
-git init -b main && git add . && git commit -m "Add hub-sync"
-git remote add origin https://github.com/orchestral-hub/hub-sync.git
-git push -u origin main
-```
+It saves `reports/latest.md` in this repo and shows the same on the run's summary page:
+- **Packs that need attention:** packs that fail the pack check or are behind upstream.
+- **Open PRs on orchestral-hub:** each with its test (CI) result and pack check.
+- **New upstream PRs since the last report:** with whether they've been recreated on the hub.
+  All open upstream PRs are in `reports/upstream_prs.tsv`.
 
-### 2. Give the workflows access to the organisation
-A workflow's built-in token can only change its own repo, so hub-sync needs its own credentials.
+If any pack or hub PR fails, it opens (or comments on) an issue titled
+**"Pack report: failures found"** in this repo.
 
-**Option A (recommended): a GitHub App.** Organisation settings → Developer settings → GitHub Apps → New.
-- Webhook: off.
-- Repository permissions:
-  - Administration: Read and write (to create repos)
-  - Contents: Read and write
-  - Pull requests: Read and write
-  - Workflows: Read and write (the packs contain `.github/workflows` files)
-  - Checks: Read-only
-  - Commit statuses: Read-only
-- Install it on the organisation with **All repositories**.
-- In hub-sync → Settings → Secrets and variables → Actions:
-  - variable `HUB_APP_ID` = the App ID
-  - secret `HUB_APP_PRIVATE_KEY` = the private key (`.pem` contents)
+The pack check looks at `pack.yaml` (name, description, version, author, `ref` format,
+`python_versions`), the pack's folder layout and whether every YAML file is valid.
 
-**Option B: a personal access token**, saved as secret `HUB_TOKEN`.
-- Fine-grained: resource owner `orchestral-hub`, All repositories, the same permissions as above.
-- Classic: scopes `repo` and `workflow`.
+## Recreate upstream PR
 
-Optional variables: `HUB_ORG` (default `orchestral-hub`), `UPSTREAM_ORG` (default `StackStorm-Exchange`).
+Copies an open StackStorm Exchange PR into the matching orchestral-hub repo.
+Actions → **Recreate upstream PR** → Run workflow, then enter:
 
-### 3. Organisation settings
-- **Actions → General → Policies:** allow actions and reusable workflows from `StackStorm-Exchange/*`.
-  The packs' CI uses `StackStorm-Exchange/ci/.github/workflows/...@master`.
-- **Member privileges:** make sure public repositories can be created.
-- hub-sync's **Pack report** commits to `main`. If you protect `main`, let GitHub Actions push to it.
+| Input | Example |
+|---|---|
+| Pack repo name | `stackstorm-aws` |
+| Upstream PR number | `113` |
 
-### 4. First run
-1. Actions → **Quarterly sync** → Run workflow with *dry run* ticked. The run's summary page lists
-   what would be created.
-2. Run it again without dry run and *only* = `stackstorm-email stackstorm-jira` to try two packs.
-3. Run it without dry run and with *only* empty to copy everything. Later runs happen on the schedule.
-4. Run **Pack report** once to get the first `reports/latest.md`.
+It pushes the PR's code to branch `upstream-pr/<number>` and opens a PR titled
+`[upstream #<number>] <original title>`. The pack's own CI tests it; merge it on GitHub
+once the checks pass. Running it again for the same PR refreshes the branch.
 
-## Day to day
-- Read `reports/latest.md` or the latest **Pack report** run. New upstream PRs are marked *new*.
-- To bring an upstream PR over: Actions → **Recreate upstream PR** → repo (e.g. `stackstorm-aws`) and PR number.
-- Review and merge hub PRs on GitHub once their checks pass. That includes the quarterly
-  "Sync with upstream" PRs.
+If the hub repo is behind upstream, the PR may also bring in those upstream commits.
+The PR description says so; merging the pack's sync PR first avoids it.
 
 ## Things to know
-- Hub repos are standalone copies, not forks: no "forked from" label and Actions run normally.
-- On every push to `master`, most packs run a *Release* workflow that tags the version in
-  `pack.yaml`. That's harmless on the hub; disable it per repo if you don't want the tags.
-- GitHub App tokens last one hour; a full sync of ~180 packs takes well under that.
-- GitHub pauses scheduled workflows after 60 days without commits. The weekly report commit
+
+- **Token:** the workflows use the `HUB_TOKEN` secret. When it expires, generate a new one
+  (scopes `repo` and `workflow`) and update the secret. Nothing else changes.
+- **PR tests** rely on StackStorm's shared CI workflow, so orchestral-hub must allow actions
+  from `StackStorm-Exchange/*` (Org settings → Actions).
+- **Release tags:** most packs have a *Release* workflow that tags the `pack.yaml` version on
+  each push to `master`. That's harmless; disable it in a pack if you don't want the tags.
+- **Scheduled runs pause** if this repo has no commits for 60 days. The weekly report commit
   prevents that.
+- **Excluding a pack:** add its repo name to `config/exclude.txt`.
 
 ## Running locally
+
 Needs `bash`, `git`, `jq`, `gh` (logged in with `gh auth login`) and optionally PyYAML.
 
 ```bash
 DRY_RUN=true ONLY="stackstorm-aws" WORK_DIR=./work scripts/quarterly_sync.sh
 ```
+```bash
+WORK_DIR=./work scripts/recreate_upstream_pr.sh stackstorm-aws 113
+```
+```bash
+ONLY="stackstorm-aws" WORK_DIR=./work scripts/report.sh
+```
 
 ## Files
+
 | Path | Purpose |
 |---|---|
 | `scripts/lib.sh` | Shared settings, GitHub helpers and the pack check |
@@ -106,4 +96,5 @@ DRY_RUN=true ONLY="stackstorm-aws" WORK_DIR=./work scripts/quarterly_sync.sh
 | `config/exclude.txt` | Upstream repos never to copy |
 | `reports/` | Latest report (`latest.md`, `*.tsv`), committed by the Pack report |
 | `state/upstream_prs.json` | Upstream PRs seen in the last report, used to mark new ones |
+| `.github/workflows/` | The three workflows |
 | `.github/actions/setup` | Shared setup: PyYAML, token, git credentials |
