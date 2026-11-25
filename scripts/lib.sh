@@ -50,7 +50,13 @@ list_hub_repos() {
 }
 
 # Default branch of a hub repo, or nothing if the repo does not exist.
-hub_default_branch() { gh api "repos/$HUB_ORG/$1" --jq .default_branch 2>/dev/null || true; }
+# (On a 404, gh still prints the --jq result of the error body, i.e. "null", so check the exit code.)
+hub_default_branch() {
+  local b
+  b="$(gh api "repos/$HUB_ORG/$1" --jq .default_branch 2>/dev/null)" || return 0
+  [[ -n "$b" && "$b" != null ]] && printf '%s\n' "$b"
+  return 0
+}
 
 # Is this repo selected by ONLY (empty ONLY = everything)?
 wanted() { [[ -z "$ONLY" || " $ONLY " == *" $1 "* ]]; }
