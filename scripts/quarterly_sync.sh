@@ -23,11 +23,37 @@ INCLUDE_ARCHIVED="${INCLUDE_ARCHIVED:-false}"
 SYNC_BRANCH="${SYNC_BRANCH:-hub-sync/upstream}"
 RESULTS="$WORK_DIR/sync-results.tsv"
 CHANGED="$WORK_DIR/changed-packs.txt"
+CREATE_LIMITED="$WORK_DIR/create-limit-reached"
 : > "$RESULTS"
+rm -f "$CREATE_LIMITED"
 
 record() {   # record <repo> <result> [details]
   printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >> "$RESULTS"
   log "$1: $2${3:+ ($3)}"
+}
+
+# Push to a hub repo. On failure sets PUSH_ERR to a short reason; for GitHub push
+# protection (secrets in the upstream history) it starts with "secret-scanning:" and
+# carries the links that allow those secrets.
+PUSH_ERR=""
+hub_push() {   # hub_push <dir> <git push args...>
+  local dir="$1" out links; shift
+  if out="$(git -C "$dir" push --quiet "$@" 2>&1)"; then PUSH_ERR=""; return 0; fi
+  if grep -q -e 'GH013' -e 'Push cannot contain secrets' <<<"$out"; then
+    links="$(grep -o 'https://github.com/[^ ]*/unblock-secret/[^ ]*' <<<"$out" | sort -u | tr '\n' ' ')"
+    PUSH_ERR="secret-scanning: ${links% }"
+  else
+    PUSH_ERR="$(grep -v '^remote: *$' <<<"$out" | tail -3 | tr '\n' ' ')"
+  fi
+  return 1
+}
+
+push_failed() {   # push_failed <repo> <what>
+  if [[ "$PUSH_ERR" == secret-scanning:* ]]; then
+    record "$1" BLOCKED "GitHub push protection found secrets in the upstream history. Open each link, choose a reason to allow it, then re-run with only = $1. Links: ${PUSH_ERR#secret-scanning: }"
+  else
+    record "$1" FAILED "$2 failed: $PUSH_ERR"
+  fi
 }
 
 # Open (or refresh) the "Sync with upstream" PR on a hub repo.
@@ -49,7 +75,7 @@ open_sync_pr() {
       return 0
     fi
   fi
-  git -C "$dir" push --quiet --force "$hub" "$up_sha:refs/heads/$SYNC_BRANCH"
+  hub_push "$dir" --force "$hub" "$up_sha:refs/heads/$SYNC_BRANCH" || { push_failed "$name" "push of $SYNC_BRANCH"; return 0; }
 
   local base body num url
   base="$(git -C "$dir" merge-base "$hub_sha" "$up_sha" || echo "$hub_sha")"
@@ -117,15 +143,27 @@ sync_pack() {
       record "$name" "would create" "$vstatus ${up_sha:0:7}"; return 0
     fi
     if [[ -z "$hub_branch" ]]; then
-      if ! gh repo create "$HUB_ORG/$name" --public --disable-wiki \
+      # GitHub limits how many repos can be created per hour. Once we hit it, postpone the
+      # rest to the next run instead of failing them.
+      if [[ -f "$CREATE_LIMITED" ]]; then
+        record "$name" postponed "GitHub's repo-creation limit was reached; the next run creates it"; return 0
+      fi
+      local err
+      if ! err="$(gh repo create "$HUB_ORG/$name" --public --disable-wiki \
              --description "StackStorm pack $name, synced from $UPSTREAM_ORG/$name" \
-             --homepage "$(upstream_web "$name")" >/dev/null; then
-        record "$name" FAILED "gh repo create failed"; return 0
+             --homepage "$(upstream_web "$name")" 2>&1 >/dev/null)"; then
+        if grep -qi 'too many repositories' <<<"$err"; then
+          touch "$CREATE_LIMITED"
+          record "$name" postponed "GitHub's repo-creation limit was reached; the next run creates it"
+        else
+          record "$name" FAILED "gh repo create failed: $err"
+        fi
+        return 0
       fi
       sleep 2   # GitHub throttles bulk repo creation
     fi
-    if ! git -C "$dir" push --quiet "$hub" "$up_sha:refs/heads/$up_branch"; then
-      record "$name" FAILED "push to new hub repo failed"; return 0
+    if ! hub_push "$dir" "$hub" "$up_sha:refs/heads/$up_branch"; then
+      push_failed "$name" "push to new hub repo"; return 0
     fi
     git -C "$dir" push --quiet "$hub" --tags 2>/dev/null || log "  $name: some tags were not pushed"
     gh api -X PATCH "repos/$HUB_ORG/$name" -f default_branch="$up_branch" >/dev/null || true
@@ -152,9 +190,11 @@ sync_pack() {
         "the new upstream version fails verification" "$verify"
     elif [[ "$DRY_RUN" == true ]]; then
       record "$name" "would update" "${hub_sha:0:7}..${up_sha:0:7}"
-    elif git -C "$dir" push --quiet "$hub" "$up_sha:refs/heads/$hub_branch" 2>/dev/null; then
+    elif hub_push "$dir" "$hub" "$up_sha:refs/heads/$hub_branch"; then
       git -C "$dir" push --quiet "$hub" --tags 2>/dev/null || true
       record "$name" updated "${hub_sha:0:7}..${up_sha:0:7}"
+    elif [[ "$PUSH_ERR" == secret-scanning:* ]]; then
+      push_failed "$name" "update push"
     else
       open_sync_pr "$name" "$dir" "$hub_branch" "$up_branch" "$up_sha" "$hub_sha" \
         "direct push to $hub_branch was refused (branch protection?)" "$verify"
@@ -196,20 +236,39 @@ title="Quarterly sync: $UPSTREAM_ORG → $HUB_ORG"
   echo "|---|---|"
   cut -f2 "$RESULTS" | sort | uniq -c | sort -rn | while read -r n what; do echo "| $what | $n |"; done
   echo
-  if grep -qv -e $'\tunchanged' -e $'\tskipped' "$RESULTS"; then
+  if grep -q $'\tBLOCKED\t' "$RESULTS"; then
+    echo "### Action needed: blocked by GitHub push protection"
+    echo
+    echo "These packs have secrets (old keys or tokens) somewhere in their upstream history, so GitHub"
+    echo "refused the push. They are already public upstream. For each link: open it, choose a reason"
+    echo "(e.g. *It's used in tests*) and click **Allow me to push this secret**. Then re-run this workflow"
+    echo "with dry run unticked and *only* = \`$(grep $'\tBLOCKED\t' "$RESULTS" | cut -f1 | tr '\n' ' ' | sed 's/ $//')\`."
+    echo
+    grep $'\tBLOCKED\t' "$RESULTS" | while IFS=$'\t' read -r n _ det; do
+      echo "- **$n**"
+      for link in ${det##*Links: }; do echo "  - $link"; done
+    done
+    echo
+  fi
+  if grep -q $'\tpostponed\t' "$RESULTS"; then
+    echo "> **$(grep -c $'\tpostponed\t' "$RESULTS") packs postponed:** GitHub limits how many repos can be created per hour."
+    echo "> Re-run this workflow in about an hour (dry run unticked) to create them."
+    echo
+  fi
+  if grep -qv -e $'\tunchanged' -e $'\tskipped' -e $'\tBLOCKED\t' -e $'\tpostponed\t' "$RESULTS"; then
     echo "### Changes"
     echo
     echo "| Pack | Result | Details |"
     echo "|---|---|---|"
-    grep -v -e $'\tunchanged' -e $'\tskipped' "$RESULTS" | while IFS=$'\t' read -r n what det; do
+    grep -v -e $'\tunchanged' -e $'\tskipped' -e $'\tBLOCKED\t' -e $'\tpostponed\t' "$RESULTS" | while IFS=$'\t' read -r n what det; do
       echo "| $n | $what | $(md_cell "$det") |"
     done
   else
-    echo "No new or updated packs."
+    echo "No other new or updated packs."
   fi
 } | summary
 
-if grep -q $'\tFAILED\t' "$RESULTS"; then
-  log "Some packs failed, see the table above."
+if grep -q -e $'\tFAILED\t' -e $'\tBLOCKED\t' "$RESULTS"; then
+  log "Some packs failed or are blocked; see the run summary."
   exit 1
 fi
