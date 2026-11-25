@@ -41,7 +41,7 @@ jobs:
       ONLY: ${{ inputs.only }}
       INCLUDE_ARCHIVED: ${{ inputs.include_archived && 'true' || 'false' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - id: setup
         uses: ./.github/actions/setup
@@ -58,7 +58,7 @@ jobs:
 
       - name: Keep results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sync-results
           path: |

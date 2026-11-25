@@ -32,7 +32,7 @@ jobs:
       HUB_ORG: ${{ vars.HUB_ORG || 'orchestral-hub' }}
       ONLY: ${{ inputs.only }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - id: setup
         uses: ./.github/actions/setup
