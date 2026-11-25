@@ -1,0 +1,49 @@
+name: Recreate upstream PR
+
+# Steps 4 -> 6: copy an open StackStorm Exchange PR into the matching hub repo
+# as a branch "upstream-pr/<number>" and open the same PR there. The pack's own
+# CI then tests it (step 5); merge it on GitHub when it passes (step 7).
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Pack repo name, e.g. stackstorm-aws"
+        required: true
+        type: string
+      pr:
+        description: "Upstream PR number, e.g. 113"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recreate-${{ inputs.repo }}-${{ inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  recreate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      UPSTREAM_ORG: ${{ vars.UPSTREAM_ORG || 'StackStorm-Exchange' }}
+      HUB_ORG: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          app-id: ${{ vars.HUB_APP_ID }}
+          private-key: ${{ secrets.HUB_APP_PRIVATE_KEY }}
+          token: ${{ secrets.HUB_TOKEN }}
+          owner: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+
+      - name: Recreate PR
+        env:
+          GH_TOKEN: ${{ steps.setup.outputs.token }}
+          REPO: ${{ inputs.repo }}
+          PR: ${{ inputs.pr }}
+        run: scripts/recreate_upstream_pr.sh "$REPO" "$PR"

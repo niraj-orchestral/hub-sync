@@ -1,0 +1,72 @@
+name: Pack report
+
+# Steps 2, 4, 5 and 6: verify every hub pack, show how far each one is from upstream,
+# list open hub PRs with their test results, and list open upstream PRs (marking new
+# ones and ones already recreated on the hub). The report is committed to reports/
+# and an issue is opened when something fails.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC. Monthly instead: "0 6 1 * *"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Only these repos, space-separated (empty = all)"
+        type: string
+        default: ""
+
+permissions:
+  contents: write   # commit the report
+  issues: write     # open an issue on failures
+
+concurrency:
+  group: pack-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      UPSTREAM_ORG: ${{ vars.UPSTREAM_ORG || 'StackStorm-Exchange' }}
+      HUB_ORG: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+      ONLY: ${{ inputs.only }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          app-id: ${{ vars.HUB_APP_ID }}
+          private-key: ${{ secrets.HUB_APP_PRIVATE_KEY }}
+          token: ${{ secrets.HUB_TOKEN }}
+          owner: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+
+      - name: Build report
+        id: report
+        env:
+          GH_TOKEN: ${{ steps.setup.outputs.token }}
+        run: scripts/report.sh
+
+      - name: Save report to the repo
+        # Also keeps the repo active, so GitHub doesn't pause the scheduled workflows.
+        if: ${{ !inputs.only }}
+        run: |
+          git add reports state
+          if git diff --cached --quiet; then echo "Report unchanged."; exit 0; fi
+          git commit --quiet -m "Pack report $(date -u +%F)"
+          git push --quiet
+
+      - name: Open or update the failures issue
+        if: steps.report.outputs.failures != '0' && !inputs.only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Pack report: failures found"
+          num=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" \
+                  --json number --jq '.[0].number // empty')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" -R "$GITHUB_REPOSITORY" --body-file reports/latest.md
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body-file reports/latest.md
+          fi

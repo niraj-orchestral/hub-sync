@@ -1,0 +1,55 @@
+name: Set up hub-sync
+description: >
+  Installs PyYAML, gets a token for the hub organisation (GitHub App or HUB_TOKEN)
+  and configures git to use it for github.com.
+inputs:
+  app-id:
+    description: GitHub App ID (repository variable HUB_APP_ID)
+    default: ""
+  private-key:
+    description: GitHub App private key (secret HUB_APP_PRIVATE_KEY)
+    default: ""
+  token:
+    description: Fallback token (secret HUB_TOKEN)
+    default: ""
+  owner:
+    description: Hub organisation
+    required: true
+outputs:
+  token:
+    description: Token for the hub organisation
+    value: ${{ steps.app.outputs.token || inputs.token }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install PyYAML
+      shell: bash
+      run: python -m pip install --quiet pyyaml
+
+    - name: Get GitHub App token
+      id: app
+      if: inputs.app-id != ''
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ inputs.owner }}
+
+    - name: Configure git
+      shell: bash
+      env:
+        GH_TOKEN: ${{ steps.app.outputs.token || inputs.token }}
+      run: |
+        if [ -z "$GH_TOKEN" ]; then
+          echo "::error::No credentials. Set repository variable HUB_APP_ID and secret HUB_APP_PRIVATE_KEY, or secret HUB_TOKEN (see README)."
+          exit 1
+        fi
+        # git reads the token from the GH_TOKEN environment variable at run time; nothing is written to disk.
+        git config --global credential.https://github.com.helper \
+          '!f() { test "$1" = get && echo username=x-access-token && echo "password=$GH_TOKEN"; }; f'
+        git config --global user.name "hub-sync[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"

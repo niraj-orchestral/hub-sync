@@ -1,0 +1,4 @@
+# Upstream repos the Quarterly sync should never copy to the hub, one per line.
+# Repos without a pack.yaml (ci, web, index, exchange-tools, ...) are skipped automatically.
+# Example:
+# stackstorm-some-pack

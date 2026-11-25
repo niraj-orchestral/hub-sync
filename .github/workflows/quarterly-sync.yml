@@ -1,0 +1,67 @@
+name: Quarterly sync
+
+# Steps 1-3, 8 and 9: copy new StackStorm Exchange packs into the hub organisation
+# and bring existing ones up to date. Packs we changed get a "Sync with upstream" PR
+# instead of being overwritten.
+
+on:
+  schedule:
+    - cron: "0 2 1 1,4,7,10 *"   # 02:00 UTC on 1 Jan, 1 Apr, 1 Jul, 1 Oct
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: only report what would change"
+        type: boolean
+        default: true
+      only:
+        description: "Only these repos, space-separated (empty = all), e.g. stackstorm-aws stackstorm-jira"
+        type: string
+        default: ""
+      include_archived:
+        description: "Also copy archived upstream repos"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hub-sync-writes
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55   # GitHub App tokens are valid for 1 hour
+    env:
+      UPSTREAM_ORG: ${{ vars.UPSTREAM_ORG || 'StackStorm-Exchange' }}
+      HUB_ORG: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+      # Scheduled runs have no inputs, so they are real (not dry) runs.
+      DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+      ONLY: ${{ inputs.only }}
+      INCLUDE_ARCHIVED: ${{ inputs.include_archived && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          app-id: ${{ vars.HUB_APP_ID }}
+          private-key: ${{ secrets.HUB_APP_PRIVATE_KEY }}
+          token: ${{ secrets.HUB_TOKEN }}
+          owner: ${{ vars.HUB_ORG || 'orchestral-hub' }}
+
+      - name: Sync packs
+        env:
+          GH_TOKEN: ${{ steps.setup.outputs.token }}
+        run: scripts/quarterly_sync.sh
+
+      - name: Keep results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-results
+          path: |
+            ${{ runner.temp }}/hub-sync-work/sync-results.tsv
+            ${{ runner.temp }}/hub-sync-work/changed-packs.txt
+          if-no-files-found: ignore

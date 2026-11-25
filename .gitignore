@@ -1,0 +1,14 @@
+# Scratch space when running the scripts locally (in Actions it lives in $RUNNER_TEMP)
+work/
+hub-sync-work/
+
+# Local secrets: never commit tokens or GitHub App private keys
+.env
+*.pem
+
+# Logs and editor/OS files
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
