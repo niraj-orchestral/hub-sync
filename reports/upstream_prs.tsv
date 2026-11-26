@@ -1,0 +1,75 @@
+pr	new	on_hub	author	updated	title	url
+stackstorm-ansible#11	new	no	cognifloyd	2022-05-11	Add json parameter to get JSON output from ansible.command*	https://github.com/StackStorm-Exchange/stackstorm-ansible/pull/11
+stackstorm-ansible#14	new	no	cognifloyd	2022-05-11	Add extra_vars parsing directives due to Jinja	https://github.com/StackStorm-Exchange/stackstorm-ansible/pull/14
+stackstorm-ansible#52	new	no	jodygilbert	2024-09-07	Support ansible collections and fix vault commands	https://github.com/StackStorm-Exchange/stackstorm-ansible/pull/52
+stackstorm-aws#38	new	no	AndyMoore	2022-06-10	addition of role and region flags	https://github.com/StackStorm-Exchange/stackstorm-aws/pull/38
+stackstorm-aws#91	new	no	grepory	2025-02-07	Add SQSServiceSensor for non-polling SQS sensor	https://github.com/StackStorm-Exchange/stackstorm-aws/pull/91
+stackstorm-aws#102	new	no	cholletk	2022-05-11	Fix issue with multiaccount (TypeError: client() got an unexpected ke…	https://github.com/StackStorm-Exchange/stackstorm-aws/pull/102
+stackstorm-aws#109	new	no	drksnw	2022-06-07	Modified action.py in order to have filters in a more conveinent way	https://github.com/StackStorm-Exchange/stackstorm-aws/pull/109
+stackstorm-aws#113	new	no	kylestewart	2022-05-11	Fix for SQS Sensor when configured credentials are 'None'	https://github.com/StackStorm-Exchange/stackstorm-aws/pull/113
+stackstorm-aws_boto3#21	new	no	DuaneB-TD	2022-05-11	Add support for session token to assume_role action	https://github.com/StackStorm-Exchange/stackstorm-aws_boto3/pull/21
+stackstorm-aws_s3#1	new	no	AndyMoore	2022-05-11	testing CI	https://github.com/StackStorm-Exchange/stackstorm-aws_s3/pull/1
+stackstorm-azure#17	new	no	cognifloyd	2022-05-11	Drop azure bundles	https://github.com/StackStorm-Exchange/stackstorm-azure/pull/17
+stackstorm-azure#19	new	no	philipphomberger	2023-11-03	Update Dependencys | Close Sync SEC Findings	https://github.com/StackStorm-Exchange/stackstorm-azure/pull/19
+stackstorm-backups#18	new	no	nmaludy	2022-05-12	Remove Postgres backups	https://github.com/StackStorm-Exchange/stackstorm-backups/pull/18
+stackstorm-bitbucket#18	new	no	blag	2022-05-12	Add action to open a PR	https://github.com/StackStorm-Exchange/stackstorm-bitbucket/pull/18
+stackstorm-bolt#12	new	no	bishopbm1	2022-05-20	Byte String Fixes	https://github.com/StackStorm-Exchange/stackstorm-bolt/pull/12
+stackstorm-cisco_aci#18	new	no	ankita-orchestral	2022-05-11	Fixed pack installation issue	https://github.com/StackStorm-Exchange/stackstorm-cisco_aci/pull/18
+stackstorm-csv#9	new	no	Kami	2022-05-12	[DONT MERGE] Test new Circle CI config with Python 3 tasks	https://github.com/StackStorm-Exchange/stackstorm-csv/pull/9
+stackstorm-elasticsearch#19	new	no	AbhyudayaSharma	2022-05-11	Add support for Elasticsearch 7.x	https://github.com/StackStorm-Exchange/stackstorm-elasticsearch/pull/19
+stackstorm-email#30	new	no	farhan27	2022-05-11	add content id for attachments	https://github.com/StackStorm-Exchange/stackstorm-email/pull/30
+stackstorm-email#37	new	no	anirudhbagri	2022-05-11	Update polling interval for email sensor	https://github.com/StackStorm-Exchange/stackstorm-email/pull/37
+stackstorm-email#46	new	no	minsis	2023-09-07	Remove account requirements	https://github.com/StackStorm-Exchange/stackstorm-email/pull/46
+stackstorm-foreman#13	new	no	cyberkov	2022-05-16	Regenerate API definitions for Foreman 1.24.3	https://github.com/StackStorm-Exchange/stackstorm-foreman/pull/13
+stackstorm-foreman#14	new	no	cyberkov	2022-05-16	Fix write command for python3	https://github.com/StackStorm-Exchange/stackstorm-foreman/pull/14
+stackstorm-freeipa#7	new	no	jschoewe	2023-06-09	update/fix-scripts-to-work-with-st2-35	https://github.com/StackStorm-Exchange/stackstorm-freeipa/pull/7
+stackstorm-github#47	new	no	MarlonHeiber	2022-11-11	V2.2.0	https://github.com/StackStorm-Exchange/stackstorm-github/pull/47
+stackstorm-github#52	new	no	alexatx15	2023-02-13	Using v2.2.0 (as per PR) , and adding GitHub security actions	https://github.com/StackStorm-Exchange/stackstorm-github/pull/52
+stackstorm-github#53	new	no	dependabot[bot]	2023-05-22	Bump requests from 2.23.0 to 2.31.0	https://github.com/StackStorm-Exchange/stackstorm-github/pull/53
+stackstorm-gitlab#12	new	no	ManonDe18	2024-01-26	Action epic.create using python gitlab library	https://github.com/StackStorm-Exchange/stackstorm-gitlab/pull/12
+stackstorm-gitlab#13	new	no	ManonDe18	2026-06-05	Add action to create an issue	https://github.com/StackStorm-Exchange/stackstorm-gitlab/pull/13
+stackstorm-gitlab#14	new	no	bishopbm1	2025-10-29	feature/gitlab-issues	https://github.com/StackStorm-Exchange/stackstorm-gitlab/pull/14
+stackstorm-git#16	new	no	dependabot[bot]	2024-01-10	Bump gitpython from 3.1.40 to 3.1.41	https://github.com/StackStorm-Exchange/stackstorm-git/pull/16
+stackstorm-jira#19	new	no	pdenning	2026-11-18	Multi profiles	https://github.com/StackStorm-Exchange/stackstorm-jira/pull/19
+stackstorm-jira#39	new	no	viveksyngh	2026-08-05	Add client cert support and new action	https://github.com/StackStorm-Exchange/stackstorm-jira/pull/39
+stackstorm-jira#92	new	no	dependabot[bot]	2026-03-14	Bump pyjwt from 2.4.0 to 2.12.0	https://github.com/StackStorm-Exchange/stackstorm-jira/pull/92
+stackstorm-jira#93	new	no	kszarek	2026-08-11	Expose issue type and status category metadata	https://github.com/StackStorm-Exchange/stackstorm-jira/pull/93
+stackstorm-jira#94	new	no	kszarek	2026-08-21	Pin CI to the stable StackStorm release	https://github.com/StackStorm-Exchange/stackstorm-jira/pull/94
+stackstorm-kafka#22	new	no	dependabot[bot]	2026-09-01	Bump kafka-python from 2.0.2 to 2.3.2	https://github.com/StackStorm-Exchange/stackstorm-kafka/pull/22
+stackstorm-manageiq#13	new	no	dependabot[bot]	2022-12-08	Bump certifi from 2020.6.20 to 2022.12.7	https://github.com/StackStorm-Exchange/stackstorm-manageiq/pull/13
+stackstorm-msexchange#16	new	no	tonybaloney	2023-08-08	Update pack exchangelib and create some tests.	https://github.com/StackStorm-Exchange/stackstorm-msexchange/pull/16
+stackstorm-nagios#8	new	no	KOezcanAtWork	2023-06-15	Patch 1	https://github.com/StackStorm-Exchange/stackstorm-nagios/pull/8
+stackstorm-napalm_logs#5	new	no	blag	2022-05-12	Require python 2 and 3 to deploy	https://github.com/StackStorm-Exchange/stackstorm-napalm_logs/pull/5
+stackstorm-netbox#41	new	no	lucasfontini	2023-10-05	Update patch.ipam.ip_addresses.yaml	https://github.com/StackStorm-Exchange/stackstorm-netbox/pull/41
+stackstorm-netbox#57	new	no	johanek	2026-03-04	Fix GET detail route when id is array (single vs multi-id)	https://github.com/StackStorm-Exchange/stackstorm-netbox/pull/57
+stackstorm-networking_utils#8	new	no	lakshmi-kannan	2023-02-14	WIP: Add a tcpdump pcap write action	https://github.com/StackStorm-Exchange/stackstorm-networking_utils/pull/8
+stackstorm-openstack#41	new	no	gwaewion	2025-03-31	server.reboot's 'hard' and 'soft' parameters were redefined as booleans	https://github.com/StackStorm-Exchange/stackstorm-openstack/pull/41
+stackstorm-openstack#42	new	no	gwaewion	2025-03-31	port.set doesn't work without munch	https://github.com/StackStorm-Exchange/stackstorm-openstack/pull/42
+stackstorm-opsgenie#17	new	no	cognifloyd	2022-05-11	Reformat API list for Github	https://github.com/StackStorm-Exchange/stackstorm-opsgenie/pull/17
+stackstorm-orion#24	new	no	jschoewe	2023-06-09	feature/sensor-to-check-if-api-is-down	https://github.com/StackStorm-Exchange/stackstorm-orion/pull/24
+stackstorm-orion#27	new	no	jamesdreid	2024-01-25	Enhanced SNMPv3 Add Node and Added custom poller action	https://github.com/StackStorm-Exchange/stackstorm-orion/pull/27
+stackstorm-phantomjs#7	new	no	jschoewe	2025-02-19	hotfix/fix-ci-errors	https://github.com/StackStorm-Exchange/stackstorm-phantomjs/pull/7
+stackstorm-qualys#6	new	no	jschoewe	2025-02-21	hotfix/fix-ci-errors	https://github.com/StackStorm-Exchange/stackstorm-qualys/pull/6
+stackstorm-rabbitmq#22	new	no	ip-sf	2023-02-08	feat: contribution of new py-amqp/asyncio based sensor, bump to v1.2.0	https://github.com/StackStorm-Exchange/stackstorm-rabbitmq/pull/22
+stackstorm-rabbitmq#24	new	no	0xliam	2024-01-24	add virtual host connection params into RabbitMQQueueSensor	https://github.com/StackStorm-Exchange/stackstorm-rabbitmq/pull/24
+stackstorm-servicenow#16	new	no	TimothyDJones	2022-10-19	ServiceNow Pack Update	https://github.com/StackStorm-Exchange/stackstorm-servicenow/pull/16
+stackstorm-slack#72	new	no	amanda11	2022-05-12	[WIP] Update lxml and slackclient to versions that supports python 3.8	https://github.com/StackStorm-Exchange/stackstorm-slack/pull/72
+stackstorm-slack#81	new	no	bertyah	2023-04-19	update users_filter_by to use pagination	https://github.com/StackStorm-Exchange/stackstorm-slack/pull/81
+stackstorm-slack#86	new	no	dependabot[bot]	2026-04-21	Bump lxml from 4.6.5 to 6.1.0	https://github.com/StackStorm-Exchange/stackstorm-slack/pull/86
+stackstorm-sql#30	new	no	ankitaOrch	2024-01-08	Modification in the descriptions and actions along with tests.	https://github.com/StackStorm-Exchange/stackstorm-sql/pull/30
+stackstorm-st2#24	new	no	cognifloyd	2022-05-11	Feature: Add KV "entry" actions	https://github.com/StackStorm-Exchange/stackstorm-st2/pull/24
+stackstorm-telegram#10	new	no	sakharovmaksim	2022-05-11	feat: add support for html parse mode	https://github.com/StackStorm-Exchange/stackstorm-telegram/pull/10
+stackstorm-telegram#11	new	no	dependabot[bot]	2021-06-01	Bump urllib3 from 1.24.2 to 1.26.5	https://github.com/StackStorm-Exchange/stackstorm-telegram/pull/11
+stackstorm-telegram#13	new	no	dependabot[bot]	2022-12-07	Bump certifi from 2017.1.23 to 2022.12.7	https://github.com/StackStorm-Exchange/stackstorm-telegram/pull/13
+stackstorm-terraform#46	new	no	apielasa	2023-04-03	Added env_variable_dict parameter	https://github.com/StackStorm-Exchange/stackstorm-terraform/pull/46
+stackstorm-tesla#6	new	no	jschoewe	2025-02-21	hotfix/fix-ci-errors	https://github.com/StackStorm-Exchange/stackstorm-tesla/pull/6
+stackstorm-trello#11	new	no	martezr	2022-05-11	Add additional actions	https://github.com/StackStorm-Exchange/stackstorm-trello/pull/11
+stackstorm-vadc#11	new	no	jschoewe	2025-02-21	hotfix/fix-ci-errors	https://github.com/StackStorm-Exchange/stackstorm-vadc/pull/11
+stackstorm-vault#28	new	no	JD-ISWT	2026-05-19	Support of wrap/unwrap actions	https://github.com/StackStorm-Exchange/stackstorm-vault/pull/28
+stackstorm-vault#29	new	no	nzlosh	2026-09-28	Debug ci	https://github.com/StackStorm-Exchange/stackstorm-vault/pull/29
+stackstorm-vra7#7	new	no	blag	2022-05-12	Block deployment until both Python 2 and 3 tests pass	https://github.com/StackStorm-Exchange/stackstorm-vra7/pull/7
+stackstorm-vsphere#37	new	no	jeking3	2022-05-11	get_properties: a property collector action	https://github.com/StackStorm-Exchange/stackstorm-vsphere/pull/37
+stackstorm-zabbix#60	new	no	masa-orca	2024-01-25	Add webhook mediatype for Zabbix 6.0 or higher	https://github.com/StackStorm-Exchange/stackstorm-zabbix/pull/60
+stackstorm-zabbix#61	new	no	cayohollanda	2024-04-01	Added the name of the MediaType and removed deprecated fields	https://github.com/StackStorm-Exchange/stackstorm-zabbix/pull/61
+stackstorm-zabbix#64	new	no	namachieli	2026-10-09	v0.2.1 - Fix missing basic connection params for SSL Verify, timeout, etc	https://github.com/StackStorm-Exchange/stackstorm-zabbix/pull/64
+stackstorm-zendesk#6	new	no	alexatx15	2023-02-09	Making alterations to create_ticket to allow for tags and specific ti…	https://github.com/StackStorm-Exchange/stackstorm-zendesk/pull/6
